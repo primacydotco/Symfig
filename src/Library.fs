@@ -10,6 +10,12 @@ module Env =
     | Some v -> v
     | None -> invalidOp $"Options: No environment value was found with key '{key}'."
 
+
+type ReadError<'details> = {
+  Key : string
+  Details : 'details
+}
+
 let private isOptional (t : System.Type) =
   t.IsGenericType &&
   t.GetGenericTypeDefinition() = typedefof<Option<_>>
@@ -30,9 +36,9 @@ let private mkOption optionType value isSome =
       | false -> noneCase, [| |]
   FSharp.Reflection.FSharpValue.MakeUnion(relevantCase, args)
 
-let private traverseResults f array =
-    let folder head tail = f head |> Result.bind (fun h -> tail |> Result.bind (fun t -> Array.append [| h |] t |> Ok))
-    Array.foldBack folder array (Ok Array.empty)
+// let private traverseResults f array =
+//     let folder head tail = f head |> Result.bind (fun h -> tail |> Result.bind (fun t -> Array.append [| h |] t |> Ok))
+//     Array.foldBack folder array (Ok Array.empty)
 
 let write key (o : 'a)  =
   let rec loop t pfx o =
@@ -63,8 +69,8 @@ let write key (o : 'a)  =
   loop typeof<'a> key o
 
 
-let read<'t> prefix (env : _) : 't =
-  let rec loop t pfx : Result<obj, string> =
+let read<'t> prefix (env : _) : Result<'t, string list> =
+  let rec loop t pfx : Validation<obj, string> =
     if isOptional t then
       loop (getOptionalType t) pfx
       |> function
@@ -72,12 +78,14 @@ let read<'t> prefix (env : _) : 't =
       | Error _ -> Ok <| mkOption t null false
     elif FSharpType.IsRecord t then
       FSharpType.GetRecordFields t
-      |> traverseResults (fun p -> loop p.PropertyType (Env.key pfx p.Name))
-      |> Result.map (fun fs -> FSharpValue.MakeRecord (t, fs))
+      |> Array.toList
+      |> Validation.traverseA (fun p -> loop p.PropertyType (Env.key pfx p.Name))
+      |> Result.map (fun fs -> FSharpValue.MakeRecord (t, List.toArray fs))
     elif FSharpType.IsTuple t then
       FSharpType.GetTupleElements t
-      |> traverseResults (fun e -> loop e pfx)
-      |> Result.map (fun fs -> FSharpValue.MakeTuple (fs, t))
+      |> Array.toList
+      |> Validation.traverseA (fun e -> loop e pfx)
+      |> Result.map (fun fs -> FSharpValue.MakeTuple (List.toArray fs, t))
     else
       let var = env pfx
       if t = typeof<bool> then
@@ -99,8 +107,6 @@ let read<'t> prefix (env : _) : 't =
       else
         match var with
         | Some v -> Ok <| upcast v
-        | None -> Error <| $"No environment value was found with key '{pfx}' and it is not optional."
+        | None -> Error [ $"No environment value was found with key '{pfx}' and it is not optional." ]
 
-  match loop typeof<'t> prefix with
-  | Ok result -> result :?> 't
-  | Error e -> invalidOp e
+  loop typeof<'t> prefix |> Result.map (fun r -> r :?> 't)

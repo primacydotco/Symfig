@@ -3,6 +3,12 @@ module Tests
 open System
 open Xunit
 
+module private Validation =
+  let force (v : Result<_,_>) =
+    match v with
+    | Ok r -> r
+    | Error e -> invalidOp $"{e}"
+
 type SampleRecordA = {
   TEST_1 : SampleRecordB
   TEST_2 : string
@@ -93,7 +99,7 @@ let ``write`` () =
 [<Fact>]
 let ``read`` () =
   let result : SampleRecordA =
-    Library.read samplePrefix sampleEnv
+    Validation.force <| Library.read samplePrefix sampleEnv
 
   Assert.Equal (sampleRecord, result)
 
@@ -101,14 +107,12 @@ let ``read`` () =
 let ``read optional`` () =
 
   let result : SampleRecordA option =
-    Library.read samplePrefix (fun _ -> None)
+    Validation.force <|  Library.read samplePrefix (fun _ -> None)
 
   Assert.Equal (None, result)
 
 [<Fact>]
-let ``read non-optional throws`` () =
-  Assert.Throws<InvalidOperationException> (fun () ->
-    let _ : SampleRecordA =
-      Library.read samplePrefix (fun _ -> None)
-    ()
-  )
+let ``read non-optional returns error`` () =
+  match Library.read samplePrefix (fun _ -> None) with
+  | Ok _ -> Assert.True false
+  | Error _ -> Assert.True true

@@ -7,6 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="fx/Validation.fs" />
     <Compile Include="Library.fs" />
   </ItemGroup>
 
