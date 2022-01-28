@@ -1,0 +1,6 @@
+# msbuild
+bin/
+obj/
+
+# vscode
+.ionide/

@@ -1,0 +1,97 @@
+module Tests
+
+open System
+open Xunit
+
+type SampleRecordA = {
+  TEST_1 : SampleRecordB
+  TEST_2 : string
+  TEST_3 : SampleRecordB * SampleRecordC
+  TEST_4 : bool
+  TEST_5 : string list
+  TEST_6 : string option
+  TEST_7 : string option
+  TEST_8 : SampleRecordC option
+  TEST_9 : SampleRecordC option
+}
+and SampleRecordB = {
+  PROPERTY_1 : string
+  PROPERTY_2 : string
+}
+and SampleRecordC = {
+  PROPERTY_3 : string
+}
+
+let samplePrefix = "MY"
+
+let sampleRecord = {
+  TEST_1 = {
+    PROPERTY_1 = "1"
+    PROPERTY_2 = "2"
+  }
+  TEST_2 = "X"
+  TEST_3 = {
+    PROPERTY_1 = "1"
+    PROPERTY_2 = "2"
+    }, {
+    PROPERTY_3 = "3"
+    }
+  TEST_4 = true
+  TEST_5 = [ "a"; "b"; "c" ]
+  TEST_6 = None
+  TEST_7 = Some "bloop"
+  TEST_8 = None
+  TEST_9 = Some {
+    PROPERTY_3 = "3"
+  }
+}
+
+let sampleVariables = [
+  "MY__TEST_1__PROPERTY_1", "1"
+  "MY__TEST_1__PROPERTY_2", "2"
+  "MY__TEST_2", "X"
+  "MY__TEST_3__PROPERTY_1", "1"
+  "MY__TEST_3__PROPERTY_2", "2"
+  "MY__TEST_3__PROPERTY_3", "3"
+  "MY__TEST_4", "true"
+  "MY__TEST_5", "a;b;c"
+  //"MY__TEST_6", is none
+  "MY__TEST_7", "bloop"
+  //"MY__TEST_8__PROPERTY_3", is none
+  "MY__TEST_9__PROPERTY_3", "3"
+]
+
+let sampleEnv key =
+  sampleVariables
+  |> List.tryFind (fun (k,_) -> k = key)
+  |> Option.map snd
+
+[<Fact>]
+let ``write`` () =
+  let result =
+    Library.write samplePrefix sampleRecord
+
+  Assert.Equal<(string * string) seq> (sampleVariables, result)
+
+[<Fact>]
+let ``read`` () =
+  let result : SampleRecordA =
+    Library.read samplePrefix sampleEnv
+
+  Assert.Equal (sampleRecord, result)
+
+[<Fact>]
+let ``read optional`` () =
+
+  let result : SampleRecordA option =
+    Library.read samplePrefix (fun _ -> None)
+
+  Assert.Equal (None, result)
+
+[<Fact>]
+let ``read non-optional throws`` () =
+  Assert.Throws<InvalidOperationException> (fun () ->
+    let _ : SampleRecordA =
+      Library.read samplePrefix (fun _ -> None)
+    ()
+  )
