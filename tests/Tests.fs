@@ -13,6 +13,13 @@ type SampleRecordA = {
   TEST_7 : string option
   TEST_8 : SampleRecordC option
   TEST_9 : SampleRecordC option
+  TEST_10 : {|
+    PROPERTY_X : string
+    PROPERTY_Y : string
+    PROPERTY_Z : {|
+      PROPERTY_F : string
+    |}
+  |}
 }
 and SampleRecordB = {
   PROPERTY_1 : string
@@ -44,6 +51,13 @@ let sampleRecord = {
   TEST_9 = Some {
     PROPERTY_3 = "3"
   }
+  TEST_10 = {|
+    PROPERTY_X = "x"
+    PROPERTY_Y = "y"
+    PROPERTY_Z = {|
+      PROPERTY_F = "f"
+    |}
+  |}
 }
 
 let sampleVariables = [
@@ -59,6 +73,9 @@ let sampleVariables = [
   "MY__TEST_7", "bloop"
   //"MY__TEST_8__PROPERTY_3", is none
   "MY__TEST_9__PROPERTY_3", "3"
+  "MY__TEST_10__PROPERTY_X", "x"
+  "MY__TEST_10__PROPERTY_Y", "y"
+  "MY__TEST_10__PROPERTY_Z__PROPERTY_F", "f"
 ]
 
 let sampleEnv key =
