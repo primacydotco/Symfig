@@ -1,4 +1,4 @@
-module Tests
+module Primacy.Symfig.Tests
 
 open System
 open Xunit
@@ -98,21 +98,24 @@ let ``write`` () =
 
 [<Fact>]
 let ``read`` () =
-  let result : SampleRecordA =
-    Validation.force <| Library.read samplePrefix sampleEnv
+  let result =
+    Validation.force <| Library.read<SampleRecordA> samplePrefix sampleEnv
 
   Assert.Equal (sampleRecord, result)
 
 [<Fact>]
 let ``read optional`` () =
 
-  let result : SampleRecordA option =
-    Validation.force <|  Library.read samplePrefix (fun _ -> None)
+  let result =
+    Validation.force <|  Library.read<SampleRecordA option> samplePrefix (fun _ -> None)
 
   Assert.Equal (None, result)
 
 [<Fact>]
 let ``read non-optional returns error`` () =
-  match Library.read samplePrefix (fun _ -> None) with
+  let target = Library.read<{| A : string; B: {| Y: string; Z: string |}; C: string option |}>
+  let targetNonOptional = 3
+
+  match target samplePrefix (fun _ -> None) with
   | Ok _ -> Assert.True false
-  | Error _ -> Assert.True true
+  | Error e -> Assert.Equal (targetNonOptional, e.Length)

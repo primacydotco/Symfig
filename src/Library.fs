@@ -1,4 +1,5 @@
-﻿module Library
+[<AutoOpen>]
+module Primacy.Symfig.Library
 
 open Microsoft.FSharp.Reflection
 
@@ -68,7 +69,7 @@ let write key (o : 'a)  =
 
   loop typeof<'a> key o
 
-
+[<RequiresExplicitTypeArguments>]
 let read<'t> prefix (env : _) : Result<'t, string list> =
   let rec loop t pfx : Validation<obj, string> =
     if isOptional t then
