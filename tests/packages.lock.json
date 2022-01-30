@@ -1100,7 +1100,7 @@
           "xunit.extensibility.core": "[2.4.1]"
         }
       },
-      "src": {
+      "Primacy.Symfig": {
         "type": "Project",
         "dependencies": {
           "FSharp.Core": "6.0.1"
