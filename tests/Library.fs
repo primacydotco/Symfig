@@ -1,4 +1,4 @@
-module Primacy.Symfig.Tests
+module Primacy.Symfig.Library
 
 open System
 open Xunit
