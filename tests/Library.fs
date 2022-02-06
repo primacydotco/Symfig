@@ -9,35 +9,39 @@ module private Validation =
     | Ok r -> r
     | Error e -> invalidOp $"{e}"
 
-type SampleRecordA = {
-  TEST_1 : SampleRecordB
-  TEST_2 : string
-  TEST_3 : SampleRecordB * SampleRecordC
-  TEST_4 : bool
-  TEST_5 : string list
-  TEST_6 : string option
-  TEST_7 : string option
-  TEST_8 : SampleRecordC option
-  TEST_9 : SampleRecordC option
+type SampleRecordA<'v> = {
+  TEST_1 : SampleRecordB<'v>
+  TEST_2 : 'v
+  TEST_3 : SampleRecordB<'v> * SampleRecordC<'v>
+  TEST_4 : 'v
+  TEST_5 : 'v list
+  TEST_6 : 'v option
+  TEST_7 : 'v option
+  TEST_8 : SampleRecordC<'v> option
+  TEST_9 : SampleRecordC<'v> option
   TEST_10 : {|
-    PROPERTY_X : string
-    PROPERTY_Y : string
+    PROPERTY_X : 'v
+    PROPERTY_Y : 'v
     PROPERTY_Z : {|
-      PROPERTY_F : string
+      PROPERTY_F : 'v
     |}
   |}
+} with interface ConfigOf<'v>
+
+and SampleRecordB<'v> = {
+  PROPERTY_1 : 'v
+  PROPERTY_2 : 'v
 }
-and SampleRecordB = {
-  PROPERTY_1 : string
-  PROPERTY_2 : string
-}
-and SampleRecordC = {
-  PROPERTY_3 : string
+and SampleRecordC<'v> = {
+  PROPERTY_3 : 'v
 }
 
-let samplePrefix = "MY"
+let sampleKeyOptions : KeyOptions = {
+  Prefix = Some "MY"
+  Append = fun a b -> $"{a}__{b}"
+}
 
-let sampleRecord = {
+let sampleRecordA = {
   TEST_1 = {
     PROPERTY_1 = "1"
     PROPERTY_2 = "2"
@@ -49,7 +53,7 @@ let sampleRecord = {
     }, {
     PROPERTY_3 = "3"
     }
-  TEST_4 = true
+  TEST_4 = "true"
   TEST_5 = [ "a"; "b"; "c" ]
   TEST_6 = None
   TEST_7 = Some "bloop"
@@ -66,7 +70,7 @@ let sampleRecord = {
   |}
 }
 
-let sampleVariables = [
+let sampleVariablesA = [
   "MY__TEST_1__PROPERTY_1", "1"
   "MY__TEST_1__PROPERTY_2", "2"
   "MY__TEST_2", "X"
@@ -85,37 +89,84 @@ let sampleVariables = [
 ]
 
 let sampleEnv key =
-  sampleVariables
+  sampleVariablesA
   |> List.tryFind (fun (k,_) -> k = key)
   |> Option.map snd
 
 [<Fact>]
 let ``write`` () =
   let result =
-    Library.write samplePrefix sampleRecord
+    Library.Strings.write sampleKeyOptions sampleRecordA
 
-  Assert.Equal<(string * string) seq> (sampleVariables, result)
+  match result with
+  | Ok result ->
+    Assert.Equal<(string * string) list> (sampleVariablesA, result)
+  | Error e ->
+    invalidOp $"%A{e}"
 
 [<Fact>]
 let ``read`` () =
   let result =
-    Validation.force <| Library.read<SampleRecordA> samplePrefix sampleEnv
+    Validation.force <| Library.Strings.read<SampleRecordA<string>> sampleKeyOptions sampleEnv
 
-  Assert.Equal (sampleRecord, result)
+  Assert.Equal (sampleRecordA, result)
+
+//[<Fact>]
+//let ``read optional`` () =
+
+//  let result =
+//    Validation.force <| Library.Strings.read<SampleRecordA<string> option> sampleKeyOptions (fun _ -> None)
+
+//  Assert.Equal (None, result)
+
+//[<Fact>]
+//let ``read non-optional returns error`` () =
+//  let target = Library.Strings.read<{| A : string; B: {| Y: string; Z: string |}; C: string option |}>
+//  let targetNonOptional = 3
+
+//  match target sampleKeyOptions (fun _ -> None) with
+//  | Ok _ -> Assert.True false
+//  | Error e -> Assert.Equal (targetNonOptional, e.Length)
+
+type SampleRecordX<'v> = {
+  ConfigA : 'v
+  ConfigB : {|
+    Config1 : 'v
+    Config2 : 'v
+  |}
+  ConfigC : 'v option
+  ConfigD : 'v option
+} with interface ConfigOf<'v>
+
+type ReadableSampleRecordX = SampleRecordX<string>
+type WriteableSampleRecordX<'secret> = SampleRecordX<SampleEnvVar<'secret>>
+and SampleEnvVar<'v> =
+  | PlainText of string
+  | Secret of 'v
+
+let sampleRecordX : WriteableSampleRecordX<int> = {
+  ConfigA = PlainText "cat"
+  ConfigB = {|
+    Config1 = PlainText "boop"
+    Config2 = Secret 42
+  |}
+  ConfigC = Some <| PlainText "dog"
+  ConfigD = None
+}
+
+let sampleVariablesX = [
+  "MY__ConfigA", PlainText "cat"
+  "MY__ConfigB__Config1", PlainText "boop"
+  "MY__ConfigB__Config2", Secret 42
+  "MY__ConfigC", PlainText "dog"
+]
 
 [<Fact>]
-let ``read optional`` () =
-
+let ``writes type-holed record`` () =
   let result =
-    Validation.force <|  Library.read<SampleRecordA option> samplePrefix (fun _ -> None)
+    Library.write [ ] sampleKeyOptions sampleRecordX
 
-  Assert.Equal (None, result)
-
-[<Fact>]
-let ``read non-optional returns error`` () =
-  let target = Library.read<{| A : string; B: {| Y: string; Z: string |}; C: string option |}>
-  let targetNonOptional = 3
-
-  match target samplePrefix (fun _ -> None) with
-  | Ok _ -> Assert.True false
-  | Error e -> Assert.Equal (targetNonOptional, e.Length)
+  match result with
+  | Ok result ->
+    Assert.Equal<(string * SampleEnvVar<int>) seq> (sampleVariablesX, result)
+  | Error e -> invalidOp $"%A{e}"
