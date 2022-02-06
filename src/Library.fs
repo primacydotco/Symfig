@@ -3,8 +3,6 @@ module Primacy.Symfig.Library
 
 open Microsoft.FSharp.Reflection
 
-type ConfigOf<'t> = interface end
-
 type EnvVar<'value> = string * 'value
 
 type EnvError<'details> = {
@@ -80,7 +78,7 @@ type KeyOptions = {
   Append : string -> string -> string
 }
 
-let write (encoders : TryEncoder<'value> seq) (opts : KeyOptions) (config : 'config when 'config :> ConfigOf<'value>) : Result<EnvVar<'value> list, EnvError<string> list>  =
+let write (encoders : TryEncoder<'value> seq) (opts : KeyOptions) (config : 'config) : Result<EnvVar<'value> list, EnvError<string> list>  =
   let valueType = typeof<'value>
   let rec loop t key obj =
     match t, obj with
@@ -112,7 +110,7 @@ let write (encoders : TryEncoder<'value> seq) (opts : KeyOptions) (config : 'con
   loop typeof<'config> (defaultArg opts.Prefix "") config |> Validation.traverseA id
 
 [<RequiresExplicitTypeArguments>]
-let read<'config, 'value when 'config :> ConfigOf<'value>> (decoders : TryDecoder<'value> seq) (opts : KeyOptions) (env : _) : Result<'config, EnvError<string> list> =
+let read<'config, 'value> (decoders : TryDecoder<'value> seq) (opts : KeyOptions) (env : string -> 'value option) : Result<'config, EnvError<string> list> =
   let valueType = typeof<'value>
   let rec loop t key =
     match t, env key with
@@ -173,20 +171,20 @@ module Strings =
         | _ -> Error $"Value is not a valid boolean. Expected 'true', '1', 'false', or '0'."
     }
 
-  let private codecs = [
+  let codecs = [
     tryCodec <| Codecs.StringSeq ";"
     tryCodec <| Codecs.StringList ";"
   ]
 
-  let private encoders =
+  let encoders =
     codecs |> Seq.map (fun c -> c.Encode)
 
-  let private decoders =
+  let decoders =
     codecs |> Seq.map (fun c -> c.Decode)
 
   let write opts config =
-    write encoders opts (config : 'config when 'config :> ConfigOf<string>)
+    write encoders opts config
 
   [<RequiresExplicitTypeArguments>]
-  let read<'config when 'config :> ConfigOf<string>> opts env =
-    read<'config, string> decoders opts env
+  let read<'config> opts config =
+    read<'config, string> decoders opts config

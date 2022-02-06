@@ -26,7 +26,7 @@ type SampleRecordA<'v> = {
       PROPERTY_F : 'v
     |}
   |}
-} with interface ConfigOf<'v>
+}
 
 and SampleRecordB<'v> = {
   PROPERTY_1 : 'v
@@ -111,22 +111,22 @@ let ``read`` () =
 
   Assert.Equal (sampleRecordA, result)
 
-//[<Fact>]
-//let ``read optional`` () =
+[<Fact>]
+let ``read optional`` () =
 
-//  let result =
-//    Validation.force <| Library.Strings.read<SampleRecordA<string> option> sampleKeyOptions (fun _ -> None)
+  let result =
+    Validation.force <| Library.Strings.read<SampleRecordA<string> option> sampleKeyOptions (fun _ -> None)
 
-//  Assert.Equal (None, result)
+  Assert.Equal (None, result)
 
-//[<Fact>]
-//let ``read non-optional returns error`` () =
-//  let target = Library.Strings.read<{| A : string; B: {| Y: string; Z: string |}; C: string option |}>
-//  let targetNonOptional = 3
+[<Fact>]
+let ``read non-optional returns error`` () =
+  let target = Library.Strings.read<{| A : string; B: {| Y: string; Z: string |}; C: string option |}>
+  let targetNonOptional = 3
 
-//  match target sampleKeyOptions (fun _ -> None) with
-//  | Ok _ -> Assert.True false
-//  | Error e -> Assert.Equal (targetNonOptional, e.Length)
+  match target sampleKeyOptions (fun _ -> None) with
+  | Ok _ -> Assert.True false
+  | Error e -> Assert.Equal (targetNonOptional, e.Length)
 
 type SampleRecordX<'v> = {
   ConfigA : 'v
@@ -136,7 +136,7 @@ type SampleRecordX<'v> = {
   |}
   ConfigC : 'v option
   ConfigD : 'v option
-} with interface ConfigOf<'v>
+}
 
 type ReadableSampleRecordX = SampleRecordX<string>
 type WriteableSampleRecordX<'secret> = SampleRecordX<SampleEnvVar<'secret>>
