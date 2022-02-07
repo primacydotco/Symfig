@@ -155,16 +155,23 @@ let sampleRecordX : WriteableSampleRecordX<int> = {
 }
 
 let sampleVariablesX = [
-  "MY__ConfigA", PlainText "cat"
-  "MY__ConfigB__Config1", PlainText "boop"
-  "MY__ConfigB__Config2", Secret 42
-  "MY__ConfigC", PlainText "dog"
+  "X__CONFIGA", PlainText "cat"
+  "X__CONFIGB__CONFIG1", PlainText "boop"
+  "X__CONFIGB__CONFIG2", Secret 42
+  "X__CONFIGC", PlainText "dog"
 ]
+
+let sampleKeyOptionsX : KeyOptions = {
+  Prefix = Some "X"
+  // You can format keys as you like
+  // https://maxdeviant.com/posts/2019/implementing-a-case-conversion-library-in-fsharp-and-haskell/
+  Append = fun a b -> $"{a}__{b.ToUpperInvariant()}"
+}
 
 [<Fact>]
 let ``writes type-holed record`` () =
   let result =
-    Library.write [ ] sampleKeyOptions sampleRecordX
+    Library.write [ ] sampleKeyOptionsX sampleRecordX
 
   match result with
   | Ok result ->
