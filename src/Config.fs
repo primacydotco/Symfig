@@ -1,13 +1,14 @@
 [<AutoOpen>]
-module Primacy.Symfig.Library
+module Primacy.Symfig.Config
 
 open Microsoft.FSharp.Reflection
 
-type EnvVar<'value> = string * 'value
+type EnvVars<'value> = Map<string, 'value>
+type EnvErrors<'details> = {| Key: string; Details: 'details |} list
 
-type EnvError<'details> = {
-  Key : string
-  Details : 'details
+type KeyOptions = {
+  Prefix : string option
+  Append : string -> string -> string
 }
 
 type Encoder<'value> = obj -> Result<'value, string>
@@ -73,12 +74,8 @@ let private (|IsCodableWith|_|) (encoders : _ seq) t =
 let private (|IsAssignableTo|_|) (b :System.Type) (a : System.Type) =
   if a.IsAssignableTo b then Some a else None
 
-type KeyOptions = {
-  Prefix : string option
-  Append : string -> string -> string
-}
-
-let write (encoders : TryEncoder<'value> seq) (opts : KeyOptions) (config : 'config) : Result<EnvVar<'value> list, EnvError<string> list>  =
+[<RequiresExplicitTypeArguments>]
+let write<'value, 'config> (encoders : TryEncoder<'value> seq) (opts : KeyOptions) (config : 'config) : Result<EnvVars<'value>, EnvErrors<string>> =
   let valueType = typeof<'value>
   let rec loop t key obj =
     match t, obj with
@@ -100,17 +97,19 @@ let write (encoders : TryEncoder<'value> seq) (opts : KeyOptions) (config : 'con
       loop innerType key value
     | IsCodableWith encoders encode, o ->
       match encode o with
-      | Ok v -> [ Ok (key,v) ]
-      | Error e -> [ Error [ { Key = key; Details = e } ] ]
+      | Ok v -> [ Ok (key, v) ]
+      | Error e -> [ Error [ {| Key = key; Details = e |} ] ]
     | IsAssignableTo valueType _, o ->
       [ Ok (key, (o :?> 'value)) ]
     | t, _ ->
-      [ Error [ { Key = key; Details = $"No encoders available to encode a '{t.Name}' as a '{valueType.Name}'." } ] ]
+      [ Error [ {| Key = key; Details = $"No encoders available to encode a '{t.Name}' as a '{valueType.Name}'." |} ] ]
 
-  loop typeof<'config> (defaultArg opts.Prefix "") config |> Validation.traverseA id
+  loop typeof<'config> (defaultArg opts.Prefix "") config
+  |> Validation.traverseA id
+  |> Result.map Map
 
 [<RequiresExplicitTypeArguments>]
-let read<'config, 'value> (decoders : TryDecoder<'value> seq) (opts : KeyOptions) (env : string -> 'value option) : Result<'config, EnvError<string> list> =
+let read<'value, 'config> (decoders : TryDecoder<'value> seq) (opts : KeyOptions) (env : string -> 'value option) : Result<'config, EnvErrors<string>> =
   let valueType = typeof<'value>
   let rec loop t key =
     match t, env key with
@@ -132,21 +131,21 @@ let read<'config, 'value> (decoders : TryDecoder<'value> seq) (opts : KeyOptions
     | IsCodableWith decoders decode, Some v ->
       match decode v with
       | Ok v -> Ok v
-      | Error e -> Error [ { Key = key; Details = e } ]
+      | Error e -> Error [ {| Key = key; Details = e |} ]
     | IsAssignableTo valueType _, Some v ->
       Ok <| upcast v
     | t, Some _ ->
-      Error [ { Key = key; Details = $"No decoders available to decode a '{t.Name}' as a '{valueType.Name}'." } ]
+      Error [ {| Key = key; Details = $"No decoders available to decode a '{t.Name}' as a '{valueType.Name}'." |} ]
     | _, None ->
-      Error [ { Key = key; Details = $"No environment value with key '{key}' and it was not optional." } ]
+      Error [ {| Key = key; Details = $"No environment value with key '{key}' and it was not optional." |} ]
 
-  loop typeof<'config> (defaultArg opts.Prefix "") |> Result.map (fun r -> r :?> 'config)
+  loop typeof<'config> (defaultArg opts.Prefix "")
+  |> Result.map (fun r -> r :?> 'config)
 
-[<RequireQualifiedAccess>]
-module Strings =
+module String =
 
-  module Codecs =
-    let StringSeq (seperator : string) = {
+  module Codec =
+    let ``string seq`` (seperator : string) = {
       Encode = fun (strings : string seq) ->
         match strings |> Seq.tryFind (fun str ->  str.Contains seperator) with
         | Some _ -> Error $"Value must not contain seperator '{seperator}' but it do."
@@ -154,14 +153,14 @@ module Strings =
       Decode = Ok << fun str -> str.Split seperator
     }
 
-    let StringList (seperator : string) =
-      let c = StringSeq seperator
+    let ``string list`` (seperator : string) =
+      let c = ``string seq`` seperator
       {
         Encode = List.toSeq >> c.Encode
         Decode = c.Decode >> Result.map Seq.toList
       }
 
-    let Bool () = {
+    let ``bool`` () = {
       Encode = Ok << function
         | true -> "true"
         | false -> "false"
@@ -172,8 +171,9 @@ module Strings =
     }
 
   let codecs = [
-    tryCodec <| Codecs.StringSeq ";"
-    tryCodec <| Codecs.StringList ";"
+    tryCodec <| Codec.``string seq`` ";"
+    tryCodec <| Codec.``string list`` ";"
+    tryCodec <| Codec.``bool`` ()
   ]
 
   let encoders =
@@ -183,8 +183,8 @@ module Strings =
     codecs |> Seq.map (fun c -> c.Decode)
 
   let write opts config =
-    write encoders opts config
+    write<string, _> encoders opts config
 
   [<RequiresExplicitTypeArguments>]
-  let read<'config> opts config =
-    read<'config, string> decoders opts config
+  let read<'config> opts env =
+    read<string, 'config> decoders opts env
