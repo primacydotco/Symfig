@@ -5,12 +5,10 @@ open Microsoft.FSharp.Reflection
 
 type EnvVars<'value> = Map<string, 'value>
 type EnvErrors<'details> = {| Key: string; Details: 'details |} list
-
 type KeyOptions = {
   Prefix : string option
   Append : string -> string -> string
 }
-
 type Encoder<'value> = obj -> Result<'value, string>
 type TryEncoder<'value> = System.Type -> Encoder<'value> option
 type Encoder<'t, 'value> = 't -> Result<'value, string>
@@ -74,7 +72,14 @@ let private (|IsCodableWith|_|) (encoders : _ seq) t =
 let private (|IsAssignableTo|_|) (b :System.Type) (a : System.Type) =
   if a.IsAssignableTo b then Some a else None
 
-[<RequiresExplicitTypeArguments>]
+/// <summary>
+/// Write a config as <see cref="EnvVar{'value}"/>.
+/// </summary>
+/// <typeparam name="'value">The type of values to return.</typeparam>
+/// <typeparam name="'config">The type of config from which to fetch values.</typeparam>
+/// <param name="encoders">Functions which, when given a type and a property of a <typeparamref name="'config"/>, may encode a <typeparamref name="'value"/>.</param>
+/// <param name="opts">Options for defining keys.</param>
+/// <param name="env">A function which, when given a key, returns a value.</param>
 let write<'value, 'config> (encoders : TryEncoder<'value> seq) (opts : KeyOptions) (config : 'config) : Result<EnvVars<'value>, EnvErrors<string>> =
   let valueType = typeof<'value>
   let rec loop t key obj =
@@ -108,6 +113,14 @@ let write<'value, 'config> (encoders : TryEncoder<'value> seq) (opts : KeyOption
   |> Validation.traverseA id
   |> Result.map Map
 
+/// <summary>
+/// Reads <typeparamref name="'value"/> from <paramref name="env"/> as a <typeparamref name="'config"/>.
+/// </summary>
+/// <typeparam name="'value">The type of values to return.</typeparam>
+/// <typeparam name="'config">The type of config from which to fetch values.</typeparam>
+/// <param name="decoders">Functions which, when given a type and a <typeparamref name="'value"/>, may decode a into properties of the <typeparamref name="'config"/>.</param>
+/// <param name="opts">Options for defining keys.</param>
+/// <param name="env">A function which, when given a key, returns a value.</param>
 [<RequiresExplicitTypeArguments>]
 let read<'value, 'config> (decoders : TryDecoder<'value> seq) (opts : KeyOptions) (env : string -> 'value option) : Result<'config, EnvErrors<string>> =
   let valueType = typeof<'value>
@@ -183,7 +196,7 @@ module String =
     codecs |> Seq.map (fun c -> c.Decode)
 
   let write opts config =
-    write<string, _> encoders opts config
+    write encoders opts config
 
   [<RequiresExplicitTypeArguments>]
   let read<'config> opts env =
