@@ -56,3 +56,32 @@ let ``writes`` () =
 let ``reads`` () =
   let result = read<SampleEnvVar<int>, WriteableSampleRecordX<int>> [ ] sampleKeyOptionsX (fun k -> sampleVariablesX |> Map.tryFind k)
   Assert.Equal (Ok sampleRecordX, result)
+
+[<Fact>]
+let ``read non-optional returns error`` () =
+  let target = read<string, {| A : string; B: {| Y: string; Z: string |}; C: string option |}> [ ]
+  let targetNonOptional = 3 // Three properties in our target which aren't optional.
+
+  match target sampleKeyOptionsX (fun _ -> None) with
+  | Ok _ -> Assert.True false
+  | Error e -> Assert.Equal (targetNonOptional, e.Length)
+
+[<Fact>]
+let ``read optional`` () =
+  let result = read<string, {| A : string |} option> [ ] sampleKeyOptionsX (fun _ -> None)
+
+  match result with
+  | Ok r -> Assert.True r.IsNone
+  | Error e -> Assert.True false
+
+
+[<Fact>]
+let ``write optional none omits`` () =
+  let result =
+    {| A = "a"; B = None |}
+    |> write<string, _> [ ] sampleKeyOptionsX
+    |> Result.map Map.toList
+
+  match result with
+  | Ok r -> Assert.Equal<_ list> ([("X__A", "a")], r)
+  | Error e -> Assert.True false
