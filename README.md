@@ -2,12 +2,12 @@
 
 Symfig is a library for reliable configuration as code.
 
-We write our applications and define our infrastructure in F#, why not config too?
-Unlike [FsConfig](https://github.com/demystifyfp/FsConfig), Symfig let's you read and _write_ environment variables so you'll never have runtime errors because of misnamed or missed environment variables.
+We write our applications and define our infrastructure in F#. Why not config too?
+Unlike [FsConfig](https://github.com/demystifyfp/FsConfig), Symfig lets you read and _write_ environment variables so that you'll never have runtime errors because of misnamed or missed environment variables.
 
-**Misnamed** environment variables might occur where the application is reading an environment variable `LICENSE_KEY` but the environment declares one named `LICENCE_KEY`.
+**Misnamed** environment variables might occur where the application reads an environment variable named `LICENSE_KEY` but the environment declares one named `LICENCE_KEY`.
 
-**Missed** environment variables might occur where the application gets a new feature which depends upon a new environment variable but it doesn't never gets declared in the environment.
+**Missed** environment variables might occur where the application starts depending on a new environment variable, but it never gets declared in the environment.
 
 ## Usage
 
