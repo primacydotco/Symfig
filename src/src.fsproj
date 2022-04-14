@@ -6,6 +6,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="fx/Validation.fs" />
+    <Compile Include="Schema.fs" />
     <Compile Include="Config.fs" />
   </ItemGroup>
 </Project>

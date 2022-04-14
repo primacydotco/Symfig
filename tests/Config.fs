@@ -35,14 +35,14 @@ let sampleVariablesX = Map [
   "X__CONFIGC", PlainText "dog"
 ]
 
-let sampleKeyOptionsX : Config.KeyOptions = {
+let sampleKeyOptionsX = {
   Prefix = Some "X"
   // You can format keys as you like
   // https://maxdeviant.com/posts/2019/implementing-a-case-conversion-library-in-fsharp-and-haskell/
   Append = fun a b -> $"{a}__{b.ToUpperInvariant()}"
 }
 
-let sampleEnvReader (written : Result<Config.EnvVars<_>, Config.EnvErrors<string>>) (key : string) =
+let sampleEnvReader (written : Result<EnvVars<_>, EnvErrors<string>>) (key : string) =
   match written with
   | Ok vars -> vars |> Map.tryFind key
   | Error _ -> None
@@ -106,7 +106,7 @@ let ``basic usage example works`` () =
     ConfigC = None
   }
 
-  let options : Config.KeyOptions = {
+  let options = {
     Prefix = Some "MY"
     Append = fun a b -> $"{a}__{b}"
   }

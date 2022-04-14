@@ -22,7 +22,7 @@ module Config =
     Reveals : 'value
   }
 
-  let options : Config.KeyOptions = {
+  let options = {
     // A prefix for environment variable keys.
     Prefix = None
     // A function to build environment variable keys from nested properties.
@@ -44,7 +44,7 @@ let main args =
   | Ok config ->
     printfn $"{config.Says}. '{config.Reveals}'"
   | Error e ->
-    printfn $"Configuration error.\n{Config.EnvErrors.print e}"
+    printfn $"Configuration error.\n{EnvErrors.print e}"
 
   0
 

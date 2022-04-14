@@ -31,10 +31,10 @@ let main args =
   let environment, secrets =
     match config with
     | Ok envvars ->
-      envvars |> Config.EnvVars.choose (function _, PlainText v -> Some v | _ -> None),
-      envvars |> Config.EnvVars.choose (function _, Secret v -> Some v | _ -> None)
+      envvars |> EnvVars.choose (function _, PlainText v -> Some v | _ -> None),
+      envvars |> EnvVars.choose (function _, Secret v -> Some v | _ -> None)
     | Error error ->
-      invalidOp $"Configuration error.\n{Config.EnvErrors.print error}"
+      invalidOp $"Configuration error.\n{EnvErrors.print error}"
 
   let _ =
     ApplicationLoadBalancedFargateService(stack, "MyApplication",
