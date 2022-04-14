@@ -16,6 +16,14 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "_", "_", "{52E55035-EF9A-44
 		README.md = README.md
 	EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "samples", "samples", "{324C0710-C006-4DB7-A3CE-6798F97C8F1C}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "aws", "aws", "{F3428765-65F4-4492-9E70-5BB97A0BAE58}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "src", "samples\aws\src\src.fsproj", "{17866832-BD3A-40A6-9D5A-9A5C91D81D49}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "deploy", "samples\aws\deploy\deploy.fsproj", "{F6C64347-2D47-4B55-B869-9A051E3E1AB6}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -30,11 +38,24 @@ Global
 		{21A68B9E-4F55-401E-AE76-D7CD63DF6FEE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{21A68B9E-4F55-401E-AE76-D7CD63DF6FEE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{21A68B9E-4F55-401E-AE76-D7CD63DF6FEE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{17866832-BD3A-40A6-9D5A-9A5C91D81D49}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{17866832-BD3A-40A6-9D5A-9A5C91D81D49}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{17866832-BD3A-40A6-9D5A-9A5C91D81D49}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{17866832-BD3A-40A6-9D5A-9A5C91D81D49}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F6C64347-2D47-4B55-B869-9A051E3E1AB6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F6C64347-2D47-4B55-B869-9A051E3E1AB6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F6C64347-2D47-4B55-B869-9A051E3E1AB6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F6C64347-2D47-4B55-B869-9A051E3E1AB6}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {CAB81DA8-1D9D-46E9-B7A8-793B413063DC}
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{F3428765-65F4-4492-9E70-5BB97A0BAE58} = {324C0710-C006-4DB7-A3CE-6798F97C8F1C}
+		{17866832-BD3A-40A6-9D5A-9A5C91D81D49} = {F3428765-65F4-4492-9E70-5BB97A0BAE58}
+		{F6C64347-2D47-4B55-B869-9A051E3E1AB6} = {F3428765-65F4-4492-9E70-5BB97A0BAE58}
 	EndGlobalSection
 EndGlobal
