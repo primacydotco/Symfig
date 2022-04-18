@@ -4,11 +4,17 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <AssemblyName>Primacy.Symfig</AssemblyName>
     <PackageLicenseFile>LICENSE.md</PackageLicenseFile>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="fx/Validation.fs" />
     <Compile Include="Schema.fs" />
     <Compile Include="Config.fs" />
     <None Include="../LICENSE.md" Pack="true" PackagePath=""/>
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All"/>
   </ItemGroup>
 </Project>
