@@ -30,4 +30,4 @@ jobs:
     - name: Publish NuGet
       env:
         NUGET_KEY: ${{ secrets.NUGET_KEY }}
-      run: dotnet nuget push dist/*.nupkg -k ${NUGET_KEY} --skip-duplicate --no-symbols
+      run: dotnet nuget push dist/*.nupkg -k ${NUGET_KEY} --skip-duplicate --no-symbols true
