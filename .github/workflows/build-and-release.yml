@@ -6,7 +6,7 @@ on:
       - main
 
 jobs:
-  build:
+  build-and-release:
     runs-on: ubuntu-latest
     steps:
     - name: Check out
@@ -27,8 +27,7 @@ jobs:
       run: dotnet test -c Release --no-build
     - name: Pack NuGet
       run: dotnet pack -c Release --no-build --output dist
-    - name: Upload artifact
-      uses: actions/upload-artifact@v2
-      with:
-        name: nupkg
-        path: dist
+    - name: Publish NuGet
+      env:
+        NUGET_KEY: ${{ secrets.NUGET_KEY }}
+      run: dotnet nuget push dist/*.nupkg -k ${NUGET_KEY} --skip-duplicate --no-symbols
