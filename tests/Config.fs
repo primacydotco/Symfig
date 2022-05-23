@@ -121,3 +121,23 @@ let ``basic usage example works`` () =
   let config' = Config.String.read<SampleConfig> options (sampleEnvReader values)
 
   Assert.Equal (Ok config, config')
+
+[<Fact>]
+let ``writes without prefix`` () =
+  let config = {|
+    ConfigA = "Test"
+  |}
+
+  let options = {
+    Prefix = None
+    Append = fun a b -> $"{a}__{b}"
+  }
+
+  let result =
+    Config.String.write options config
+    |> Result.map Map.keys
+    |> Result.map Seq.exactlyOne
+
+  match result with
+  | Ok r -> Assert.Equal ("ConfigA", r)
+  | Error e -> Assert.True false

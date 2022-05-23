@@ -65,6 +65,9 @@ let private (|IsCodableWith|_|) (encoders : _ seq) t =
 let private (|IsAssignableTo|_|) (b :System.Type) (a : System.Type) =
   if a.IsAssignableTo b then Some a else None
 
+let private appendWith f k1 k2 =
+  if k1 = "" then k2 else f k1 k2
+
 /// <summary>
 /// Write a config as <see cref="EnvVar{'value}"/>.
 /// </summary>
@@ -81,7 +84,7 @@ let write<'value, 'config> (encoders : TryEncoder<'value> seq) (opts : KeyOption
       FSharpType.GetRecordFields t
       |> Array.toList
       |> List.collect (fun p ->
-        FSharpValue.GetRecordField (obj, p) |> loop p.PropertyType (opts.Append key p.Name))
+        FSharpValue.GetRecordField (obj, p) |> loop p.PropertyType (appendWith opts.Append key p.Name))
     | IsTuple t, obj ->
       FSharpType.GetTupleElements t
       |> Array.toList
@@ -127,7 +130,7 @@ let read<'value, 'config> (decoders : TryDecoder<'value> seq) (opts : KeyOptions
     | IsRecord t, _ ->
       FSharpType.GetRecordFields t
       |> Array.toList
-      |> Validation.traverseA (fun p -> loop p.PropertyType (opts.Append key p.Name))
+      |> Validation.traverseA (fun p -> loop p.PropertyType (appendWith opts.Append key p.Name))
       |> Result.map (fun fs -> FSharpValue.MakeRecord (t, List.toArray fs))
     | IsTuple t, _ ->
       FSharpType.GetTupleElements t
