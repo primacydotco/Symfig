@@ -1,5 +1,7 @@
 # Symfig
 
+[![NuGet version (Primacy.Symfig)](https://img.shields.io/nuget/vpre/Primacy.Symfig?style=flat-square)
+
 Symfig is a library for reliable configuration as code.
 
 We write our applications and define our infrastructure in F#. Why not config too?
