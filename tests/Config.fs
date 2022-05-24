@@ -139,5 +139,5 @@ let ``writes without prefix`` () =
     |> Result.map Seq.exactlyOne
 
   match result with
-  | Ok r -> Assert.Equal ("ConfigA", r)
+  | Ok r -> Assert.Equal ("__ConfigA", r)
   | Error e -> Assert.True false

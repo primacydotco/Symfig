@@ -1,6 +1,6 @@
 # Symfig
 
-[![NuGet version (Primacy.Symfig)](https://img.shields.io/nuget/vpre/Primacy.Symfig?style=flat-square)
+![NuGet version (Primacy.Symfig)](https://img.shields.io/nuget/vpre/Primacy.Symfig?style=flat-square)
 
 Symfig is a library for reliable configuration as code.
 
@@ -38,7 +38,9 @@ let config = {
 
 let options = {
   Prefix = Some "MY"
-  Append = fun a b -> $"{a}__{b}"
+  Append = fun a b ->
+    if a = "" then b
+    else $"{a}__{b}"
 }
 
 let values = Config.String.write options config
@@ -78,7 +80,9 @@ module Config =
     // A prefix for environment variable keys.
     Prefix = None
     // A function to build environment variable keys from nested properties.
-    Append = fun a b -> $"{a}__{b}"
+    Append = fun a b ->
+      if a = "" then b
+      else $"{a}__{b}"
   }
 
 module App =
